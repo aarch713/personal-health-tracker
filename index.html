@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Health Tracker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.js"></script>
     <style>
         * {
             margin: 0;
@@ -156,14 +155,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #6b7280;
-            border: 1px solid #e5e7eb;
-        }
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
         .message {
             padding: 12px 16px;
             border-radius: 6px;
@@ -192,9 +183,9 @@
         <h1>🏥 Personal Health Tracker</h1>
         
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('upload')">Upload Data</button>
-            <button class="tab-btn" onclick="switchTab('results')">Lab Results</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab(event, 'upload')">Upload Data</button>
+            <button class="tab-btn" onclick="switchTab(event, 'results')">Lab Results</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -242,7 +233,9 @@
             labResults: []
         };
 
-        function switchTab(tabName) {
+        function switchTab(event, tabName) {
+            event.preventDefault();
+            
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -387,8 +380,7 @@
         }
 
         function showMessage(text, type, tabId) {
-            const messageDiv = document.getElementById(tabId + 'Message') || document.createElement('div');
-            messageDiv.id = tabId + 'Message';
+            const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             messageDiv.textContent = text;
             
@@ -402,25 +394,27 @@
 
         // Setup drag and drop
         const uploadArea = document.getElementById('uploadArea');
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                document.getElementById('csvFile').files = files;
-                handleFileUpload({ target: { files: files } });
-            }
-        });
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('csvFile').files = files;
+                    handleFileUpload({ target: { files: files } });
+                }
+            });
+        }
 
-        // Load sample data on startup
-        window.addEventListener('load', () => {
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
             updateDashboard();
         });
     </script>
