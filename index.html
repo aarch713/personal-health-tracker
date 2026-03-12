@@ -54,25 +54,6 @@
         .tab-content.active {
             display: block;
         }
-        .upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .upload-area:hover {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        .upload-area.dragover {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        input[type="file"] {
-            display: none;
-        }
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -138,6 +119,33 @@
             background: #fef2f2;
             color: #ef4444;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
         .btn {
             padding: 10px 20px;
             border: none;
@@ -155,6 +163,19 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
         .message {
             padding: 12px 16px;
             border-radius: 6px;
@@ -166,15 +187,22 @@
             color: #10b981;
             border: 1px solid #a7f3d0;
         }
-        .message.error {
-            background: #fef2f2;
-            color: #ef4444;
-            border: 1px solid #fecaca;
-        }
         .no-data {
             text-align: center;
             padding: 40px;
             color: #9ca3af;
+        }
+        .category-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+        .category-section h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -184,8 +212,8 @@
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab(event, 'dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="switchTab(event, 'upload')">Upload Data</button>
             <button class="tab-btn" onclick="switchTab(event, 'results')">Lab Results</button>
+            <button class="tab-btn" onclick="switchTab(event, 'entry')">Add Entry</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -211,32 +239,79 @@
             <div id="dashboardContent"></div>
         </div>
 
-        <!-- Upload Tab -->
-        <div id="upload" class="tab-content">
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()">
-                <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
-                <p style="color: #1f2937; font-weight: 600; margin-bottom: 5px;">Drop CSV file here or click to browse</p>
-                <p style="color: #9ca3af; font-size: 12px;">Supported format: CSV with columns like Date, Code, Result, Unit, RefLow, RefHigh</p>
-            </div>
-            <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload(event)">
-            <div id="uploadMessage"></div>
-        </div>
-
         <!-- Results Tab -->
         <div id="results" class="tab-content">
             <div id="resultsContent"></div>
         </div>
+
+        <!-- Data Entry Tab -->
+        <div id="entry" class="tab-content">
+            <h2 style="margin-bottom: 20px; font-size: 18px; color: #1f2937;">Add New Lab Result</h2>
+            <div id="entryMessage"></div>
+            <form onsubmit="addEntry(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" id="entryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Test Code *</label>
+                        <input type="text" id="entryCode" placeholder="e.g., GLU, HGB" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Result Value *</label>
+                        <input type="number" id="entryResult" step="0.01" placeholder="e.g., 5.2" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type="text" id="entryUnit" placeholder="e.g., mmol/L">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Reference Low</label>
+                        <input type="number" id="entryRefLow" step="0.01" placeholder="Optional">
+                    </div>
+                    <div class="form-group">
+                        <label>Reference High</label>
+                        <input type="number" id="entryRefHigh" step="0.01" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Save Entry</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearEntryForm()">Clear</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
+        // Sample data - hardcoded
         let data = {
-            labResults: []
+            labResults: [
+                {date: "2026-02-01", testCode: "GLU", result: 5.2, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-02-01", testCode: "HGB", result: 13.5, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-02-01", testCode: "WBC", result: 7.2, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-02-01", testCode: "ALT", result: 28, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-02-01", testCode: "Cr", result: 0.85, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+                {date: "2026-02-03", testCode: "GLU", result: 5.5, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-02-03", testCode: "HGB", result: 13.2, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-02-03", testCode: "WBC", result: 11.6, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-02-03", testCode: "ALT", result: 35, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-02-03", testCode: "Cr", result: 0.92, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+                {date: "2026-02-05", testCode: "GLU", result: 5.1, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-02-05", testCode: "HGB", result: 13.8, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-02-05", testCode: "WBC", result: 8.1, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-02-05", testCode: "ALT", result: 32, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-02-05", testCode: "Cr", result: 0.88, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+            ]
         };
 
         function switchTab(event, tabName) {
             event.preventDefault();
             
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -244,7 +319,6 @@
                 btn.classList.remove('active');
             });
 
-            // Show selected tab
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
 
@@ -252,49 +326,16 @@
                 updateResultsTab();
             } else if (tabName === 'dashboard') {
                 updateDashboard();
+            } else if (tabName === 'entry') {
+                setTodayDate();
             }
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim());
-                    
-                    data.labResults = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        if (!lines[i].trim()) continue;
-                        
-                        const values = lines[i].split(',').map(v => v.trim());
-                        const row = {};
-                        headers.forEach((header, idx) => {
-                            row[header] = values[idx] || '';
-                        });
-                        
-                        if (row.Date && row.Code && row.Result) {
-                            data.labResults.push(row);
-                        }
-                    }
-
-                    showMessage(`✅ Successfully loaded ${data.labResults.length} test results!`, 'success', 'upload');
-                    updateDashboard();
-                } catch (error) {
-                    showMessage(`❌ Error parsing CSV: ${error.message}`, 'error', 'upload');
-                }
-            };
-            reader.readAsText(file);
         }
 
         function updateDashboard() {
             const total = data.labResults.length;
             const normal = data.labResults.filter(r => !isAbnormal(r)).length;
             const abnormal = total - normal;
-            const dates = data.labResults.map(r => r.Date).filter(Boolean);
+            const dates = data.labResults.map(r => r.date).filter(Boolean);
             const latest = dates.length > 0 ? dates[dates.length - 1] : '-';
 
             document.getElementById('totalTests').textContent = total;
@@ -303,11 +344,12 @@
             document.getElementById('latestDate').textContent = latest;
 
             if (total === 0) {
-                document.getElementById('dashboardContent').innerHTML = '<div class="no-data">📊 No data loaded yet. Upload a CSV file to get started!</div>';
+                document.getElementById('dashboardContent').innerHTML = '<div class="no-data">📊 No data available.</div>';
             } else {
+                const uniqueDates = new Set(dates).size;
                 document.getElementById('dashboardContent').innerHTML = `
                     <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">
-                        📈 Showing ${total} test results from ${new Set(dates).size} unique dates
+                        📈 Showing ${total} test results from ${uniqueDates} unique dates
                     </p>
                 `;
             }
@@ -315,7 +357,7 @@
 
         function updateResultsTab() {
             if (data.labResults.length === 0) {
-                document.getElementById('resultsContent').innerHTML = '<div class="no-data">📋 No results to display. Upload a CSV file first.</div>';
+                document.getElementById('resultsContent').innerHTML = '<div class="no-data">📋 No results to display.</div>';
                 return;
             }
 
@@ -339,11 +381,11 @@
                 const statusClass = status === 'Normal' ? 'status-normal' : 'status-low';
                 html += `
                     <tr>
-                        <td>${result.Date || '-'}</td>
-                        <td><strong>${result.Code || '-'}</strong></td>
-                        <td>${result.Result || '-'}</td>
-                        <td>${result.Unit || '-'}</td>
-                        <td>${result.RefLow || '-'} - ${result.RefHigh || '-'}</td>
+                        <td>${result.date || '-'}</td>
+                        <td><strong>${result.testCode || '-'}</strong></td>
+                        <td>${result.result || '-'}</td>
+                        <td>${result.unit || '-'}</td>
+                        <td>${result.refLow || '-'} - ${result.refHigh || '-'}</td>
                         <td><span class="status-badge ${statusClass}">${status}</span></td>
                     </tr>
                 `;
@@ -358,9 +400,9 @@
         }
 
         function isAbnormal(result) {
-            const val = parseFloat(result.Result);
-            const low = parseFloat(result.RefLow);
-            const high = parseFloat(result.RefHigh);
+            const val = parseFloat(result.result);
+            const low = parseFloat(result.refLow);
+            const high = parseFloat(result.refHigh);
             
             if (isNaN(val)) return false;
             if (!isNaN(low) && val < low) return true;
@@ -369,9 +411,9 @@
         }
 
         function getStatus(result) {
-            const val = parseFloat(result.Result);
-            const low = parseFloat(result.RefLow);
-            const high = parseFloat(result.RefHigh);
+            const val = parseFloat(result.result);
+            const low = parseFloat(result.refLow);
+            const high = parseFloat(result.refHigh);
             
             if (isNaN(val)) return 'Unknown';
             if (!isNaN(low) && val < low) return 'Low';
@@ -379,43 +421,66 @@
             return 'Normal';
         }
 
-        function showMessage(text, type, tabId) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            messageDiv.textContent = text;
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entryDate').value = today;
+        }
+
+        function addEntry(event) {
+            event.preventDefault();
             
-            const uploadArea = document.getElementById('uploadArea');
-            if (uploadArea && uploadArea.parentNode) {
-                uploadArea.parentNode.insertBefore(messageDiv, uploadArea.nextSibling);
+            const date = document.getElementById('entryDate').value;
+            const testCode = document.getElementById('entryCode').value;
+            const result = parseFloat(document.getElementById('entryResult').value);
+            const unit = document.getElementById('entryUnit').value;
+            const refLow = document.getElementById('entryRefLow').value ? parseFloat(document.getElementById('entryRefLow').value) : null;
+            const refHigh = document.getElementById('entryRefHigh').value ? parseFloat(document.getElementById('entryRefHigh').value) : null;
+
+            if (!date || !testCode || isNaN(result)) {
+                showMessage('Please fill in all required fields', 'error', 'entry');
+                return;
             }
 
-            setTimeout(() => messageDiv.remove(), 5000);
+            data.labResults.push({
+                date: date,
+                testCode: testCode,
+                result: result,
+                unit: unit,
+                refLow: refLow,
+                refHigh: refHigh
+            });
+
+            showMessage('✅ Entry added successfully!', 'success', 'entry');
+            clearEntryForm();
+            updateDashboard();
         }
 
-        // Setup drag and drop
-        const uploadArea = document.getElementById('uploadArea');
-        if (uploadArea) {
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    document.getElementById('csvFile').files = files;
-                    handleFileUpload({ target: { files: files } });
-                }
-            });
+        function clearEntryForm() {
+            document.getElementById('entryDate').value = '';
+            document.getElementById('entryCode').value = '';
+            document.getElementById('entryResult').value = '';
+            document.getElementById('entryUnit').value = '';
+            document.getElementById('entryRefLow').value = '';
+            document.getElementById('entryRefHigh').value = '';
+            setTodayDate();
         }
 
-        // Initialize on load
+        function showMessage(text, type, tabId) {
+            const messageDiv = document.getElementById(tabId + 'Message');
+            if (messageDiv) {
+                messageDiv.className = `message ${type}`;
+                messageDiv.textContent = text;
+                messageDiv.style.display = 'block';
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateDashboard();
+            setTodayDate();
         });
     </script>
 </body>
