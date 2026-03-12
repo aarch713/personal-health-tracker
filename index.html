@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Health Tracker</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,20 +12,417 @@
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: #f5f5f5;
+            padding: 20px;
         }
-        #root {
-            min-height: 100vh;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .upload-area.dragover {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .stat-card .value {
+            color: #10b981;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #f9fafb;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-normal {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+        .status-low {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+        .status-high {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .message.success {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+        }
+        .message.error {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel" src="medical_tracker.jsx"></script>
+    <div class="container">
+        <h1>🏥 Personal Health Tracker</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('upload')">Upload Data</button>
+            <button class="tab-btn" onclick="switchTab('results')">Lab Results</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Total Tests</h3>
+                    <div class="value" id="totalTests">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Normal Results</h3>
+                    <div class="value" id="normalCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Abnormal Results</h3>
+                    <div class="value" id="abnormalCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Latest Date</h3>
+                    <div class="value" id="latestDate" style="font-size: 16px;">-</div>
+                </div>
+            </div>
+            <div id="dashboardContent"></div>
+        </div>
+
+        <!-- Upload Tab -->
+        <div id="upload" class="tab-content">
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()">
+                <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
+                <p style="color: #1f2937; font-weight: 600; margin-bottom: 5px;">Drop CSV file here or click to browse</p>
+                <p style="color: #9ca3af; font-size: 12px;">Supported format: CSV with columns like Date, Code, Result, Unit, RefLow, RefHigh</p>
+            </div>
+            <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload(event)">
+            <div id="uploadMessage"></div>
+        </div>
+
+        <!-- Results Tab -->
+        <div id="results" class="tab-content">
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let data = {
+            labResults: []
+        };
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'results') {
+                updateResultsTab();
+            } else if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    
+                    data.labResults = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const row = {};
+                        headers.forEach((header, idx) => {
+                            row[header] = values[idx] || '';
+                        });
+                        
+                        if (row.Date && row.Code && row.Result) {
+                            data.labResults.push(row);
+                        }
+                    }
+
+                    showMessage(`✅ Successfully loaded ${data.labResults.length} test results!`, 'success', 'upload');
+                    updateDashboard();
+                } catch (error) {
+                    showMessage(`❌ Error parsing CSV: ${error.message}`, 'error', 'upload');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function updateDashboard() {
+            const total = data.labResults.length;
+            const normal = data.labResults.filter(r => !isAbnormal(r)).length;
+            const abnormal = total - normal;
+            const dates = data.labResults.map(r => r.Date).filter(Boolean);
+            const latest = dates.length > 0 ? dates[dates.length - 1] : '-';
+
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('normalCount').textContent = normal;
+            document.getElementById('abnormalCount').textContent = abnormal;
+            document.getElementById('latestDate').textContent = latest;
+
+            if (total === 0) {
+                document.getElementById('dashboardContent').innerHTML = '<div class="no-data">📊 No data loaded yet. Upload a CSV file to get started!</div>';
+            } else {
+                document.getElementById('dashboardContent').innerHTML = `
+                    <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">
+                        📈 Showing ${total} test results from ${new Set(dates).size} unique dates
+                    </p>
+                `;
+            }
+        }
+
+        function updateResultsTab() {
+            if (data.labResults.length === 0) {
+                document.getElementById('resultsContent').innerHTML = '<div class="no-data">📋 No results to display. Upload a CSV file first.</div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Test Code</th>
+                            <th>Result</th>
+                            <th>Unit</th>
+                            <th>Ref Range</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.labResults.forEach(result => {
+                const status = getStatus(result);
+                const statusClass = status === 'Normal' ? 'status-normal' : 'status-low';
+                html += `
+                    <tr>
+                        <td>${result.Date || '-'}</td>
+                        <td><strong>${result.Code || '-'}</strong></td>
+                        <td>${result.Result || '-'}</td>
+                        <td>${result.Unit || '-'}</td>
+                        <td>${result.RefLow || '-'} - ${result.RefHigh || '-'}</td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        function isAbnormal(result) {
+            const val = parseFloat(result.Result);
+            const low = parseFloat(result.RefLow);
+            const high = parseFloat(result.RefHigh);
+            
+            if (isNaN(val)) return false;
+            if (!isNaN(low) && val < low) return true;
+            if (!isNaN(high) && val > high) return true;
+            return false;
+        }
+
+        function getStatus(result) {
+            const val = parseFloat(result.Result);
+            const low = parseFloat(result.RefLow);
+            const high = parseFloat(result.RefHigh);
+            
+            if (isNaN(val)) return 'Unknown';
+            if (!isNaN(low) && val < low) return 'Low';
+            if (!isNaN(high) && val > high) return 'High';
+            return 'Normal';
+        }
+
+        function showMessage(text, type, tabId) {
+            const messageDiv = document.getElementById(tabId + 'Message') || document.createElement('div');
+            messageDiv.id = tabId + 'Message';
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            
+            const uploadArea = document.getElementById('uploadArea');
+            if (uploadArea && uploadArea.parentNode) {
+                uploadArea.parentNode.insertBefore(messageDiv, uploadArea.nextSibling);
+            }
+
+            setTimeout(() => messageDiv.remove(), 5000);
+        }
+
+        // Setup drag and drop
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('csvFile').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+
+        // Load sample data on startup
+        window.addEventListener('load', () => {
+            updateDashboard();
+        });
+    </script>
 </body>
 </html>
