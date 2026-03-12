@@ -3,39 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Health Tracker</title>
+    <title>Medical Lab Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: #f5f5f5;
             padding: 20px;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
             background: white;
-            border-radius: 12px;
             padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        h1 {
-            color: #1f2937;
-            margin-bottom: 30px;
-            font-size: 28px;
+        .header h1 { font-size: 28px; color: #1f2937; }
+        .lang-toggle {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
         }
         .tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .tab-btn {
-            padding: 12px 20px;
+            padding: 10px 20px;
             border: none;
             background: none;
             cursor: pointer;
@@ -48,11 +55,13 @@
             color: #10b981;
             border-bottom-color: #10b981;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .content-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .stats {
             display: grid;
@@ -61,22 +70,24 @@
             margin-bottom: 30px;
         }
         .stat-card {
-            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-            border: 1px solid #a7f3d0;
-            border-radius: 8px;
             padding: 20px;
-            text-align: center;
+            border-radius: 8px;
+            border-left: 4px solid;
         }
+        .stat-card.kidney { background: #f5f3ff; border-left-color: #8b5cf6; }
+        .stat-card.blood { background: #fef2f2; border-left-color: #ef4444; }
+        .stat-card.liver { background: #fffbeb; border-left-color: #f59e0b; }
+        .stat-card.heart { background: #fdf2f8; border-left-color: #ec4899; }
         .stat-card h3 {
-            color: #6b7280;
             font-size: 12px;
+            color: #6b7280;
             margin-bottom: 10px;
             text-transform: uppercase;
         }
         .stat-card .value {
-            color: #10b981;
             font-size: 32px;
             font-weight: bold;
+            color: #1f2937;
         }
         table {
             width: 100%;
@@ -97,28 +108,17 @@
             border-bottom: 1px solid #e5e7eb;
             font-size: 13px;
         }
-        tr:hover {
-            background: #f9fafb;
-        }
-        .status-badge {
+        tr:hover { background: #f9fafb; }
+        .badge {
             display: inline-block;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
         }
-        .status-normal {
-            background: #ecfdf5;
-            color: #10b981;
-        }
-        .status-low {
-            background: #fef2f2;
-            color: #ef4444;
-        }
-        .status-high {
-            background: #fef2f2;
-            color: #ef4444;
-        }
+        .badge-normal { background: #ecfdf5; color: #10b981; }
+        .badge-low { background: #fef2f2; color: #ef4444; }
+        .badge-high { background: #fef2f2; color: #ef4444; }
         .form-group {
             margin-bottom: 15px;
         }
@@ -168,29 +168,10 @@
             color: #6b7280;
             border: 1px solid #e5e7eb;
         }
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
         .btn-group {
             display: flex;
             gap: 10px;
             margin-top: 20px;
-        }
-        .message {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-        .message.success {
-            background: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #a7f3d0;
-        }
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            color: #9ca3af;
         }
         .category-section {
             margin-bottom: 30px;
@@ -204,253 +185,362 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        .message.success {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏥 Personal Health Tracker</h1>
-        
+        <div class="header">
+            <h1>🏥 Medical Lab Tracker</h1>
+            <button class="lang-toggle" onclick="toggleLang()">中文</button>
+        </div>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab(event, 'dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab(event, 'trends')">Trends</button>
             <button class="tab-btn" onclick="switchTab(event, 'results')">Lab Results</button>
-            <button class="tab-btn" onclick="switchTab(event, 'entry')">Add Entry</button>
+            <button class="tab-btn" onclick="switchTab(event, 'abnormal')">Abnormal</button>
+            <button class="tab-btn" onclick="switchTab(event, 'entry')">Data Entry</button>
         </div>
 
-        <!-- Dashboard Tab -->
+        <!-- Dashboard -->
         <div id="dashboard" class="tab-content active">
-            <div class="stats">
-                <div class="stat-card">
-                    <h3>Total Tests</h3>
-                    <div class="value" id="totalTests">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Normal Results</h3>
-                    <div class="value" id="normalCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Abnormal Results</h3>
-                    <div class="value" id="abnormalCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Latest Date</h3>
-                    <div class="value" id="latestDate" style="font-size: 16px;">-</div>
-                </div>
+            <div class="content-box">
+                <div class="stats" id="dashboardStats"></div>
+                <div id="dashboardContent"></div>
             </div>
-            <div id="dashboardContent"></div>
         </div>
 
-        <!-- Results Tab -->
+        <!-- Trends -->
+        <div id="trends" class="tab-content">
+            <div class="content-box">
+                <div class="form-group">
+                    <label>Select Test to View Trend</label>
+                    <select id="trendSelect" onchange="updateTrendChart()">
+                        <option value="">-- Select a test --</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div id="trendInfo"></div>
+            </div>
+        </div>
+
+        <!-- Lab Results -->
         <div id="results" class="tab-content">
-            <div id="resultsContent"></div>
+            <div class="content-box">
+                <div id="resultsContent"></div>
+            </div>
         </div>
 
-        <!-- Data Entry Tab -->
+        <!-- Abnormal -->
+        <div id="abnormal" class="tab-content">
+            <div class="content-box">
+                <div id="abnormalContent"></div>
+            </div>
+        </div>
+
+        <!-- Data Entry -->
         <div id="entry" class="tab-content">
-            <h2 style="margin-bottom: 20px; font-size: 18px; color: #1f2937;">Add New Lab Result</h2>
-            <div id="entryMessage"></div>
-            <form onsubmit="addEntry(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Date *</label>
-                        <input type="date" id="entryDate" required>
+            <div class="content-box">
+                <h2 style="margin-bottom: 20px; font-size: 18px; color: #1f2937;">Add New Lab Result</h2>
+                <div id="entryMessage"></div>
+                <form onsubmit="addEntry(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" id="entryDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Test Code *</label>
+                            <select id="entryCode" required onchange="updateTestInfo()">
+                                <option value="">-- Select test --</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Test Code *</label>
-                        <input type="text" id="entryCode" placeholder="e.g., GLU, HGB" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Test Name</label>
+                            <input type="text" id="entryTestName" readonly style="background: #f3f4f6; color: #6b7280;">
+                        </div>
+                        <div class="form-group">
+                            <label>Result Value *</label>
+                            <input type="number" id="entryResult" step="0.01" required>
+                        </div>
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Result Value *</label>
-                        <input type="number" id="entryResult" step="0.01" placeholder="e.g., 5.2" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <input type="text" id="entryUnit" readonly style="background: #f3f4f6; color: #6b7280;">
+                        </div>
+                        <div class="form-group">
+                            <label>Ref Range</label>
+                            <input type="text" id="entryRefRange" readonly style="background: #f3f4f6; color: #6b7280;">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Unit</label>
-                        <input type="text" id="entryUnit" placeholder="e.g., mmol/L">
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Save Entry</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearEntryForm()">Clear</button>
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Reference Low</label>
-                        <input type="number" id="entryRefLow" step="0.01" placeholder="Optional">
-                    </div>
-                    <div class="form-group">
-                        <label>Reference High</label>
-                        <input type="number" id="entryRefHigh" step="0.01" placeholder="Optional">
-                    </div>
-                </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">Save Entry</button>
-                    <button type="button" class="btn btn-secondary" onclick="clearEntryForm()">Clear</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // Sample data - hardcoded
+        const CAT_META = {
+            kidney: {color: "#8b5cf6", icon: "🫀"},
+            blood: {color: "#ef4444", icon: "🩸"},
+            liver: {color: "#f59e0b", icon: "🫒"},
+            heart: {color: "#ec4899", icon: "❤️"},
+            coag: {color: "#06b6d4", icon: "🩸"},
+            lipid: {color: "#10b981", icon: "🧬"},
+            metab: {color: "#f97316", icon: "⚡"},
+            other: {color: "#6b7280", icon: "🧬"}
+        };
+
+        const TEST_CAT = {
+            "Cr":"kidney","BUN":"kidney","eGFR":"kidney","UA":"kidney","K":"kidney","Na":"kidney","Ca":"kidney","HCO3":"kidney","Cl":"kidney",
+            "HGB":"blood","RBC":"blood","HCT":"blood","WBC":"blood","PLT":"blood","MCH":"blood","MCV":"blood",
+            "ALT":"liver","AST":"liver","ALP":"liver","ALB":"liver","GLB":"liver","TP":"liver",
+            "BNP":"heart","CK-MB":"heart","LDH":"heart","CK":"heart",
+            "PT":"coag","INR":"coag","FIB":"coag","FDP":"coag","D-dimer":"coag",
+            "LDL-C":"lipid","TG":"lipid","TC":"lipid",
+            "GLU":"metab","Ferritin":"metab","HbA1c":"metab"
+        };
+
+        const TEST_INFO = {
+            "GLU": {name: "Glucose", unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+            "HGB": {name: "Hemoglobin", unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+            "WBC": {name: "White Blood Cell", unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+            "ALT": {name: "Alanine Aminotransferase", unit: "U/L", refLow: 7, refHigh: 56},
+            "Cr": {name: "Creatinine", unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+            "RBC": {name: "Red Blood Cell", unit: "10^12/L", refLow: 4.3, refHigh: 5.8},
+            "PLT": {name: "Platelet", unit: "10^9/L", refLow: 125, refHigh: 350},
+            "AST": {name: "Aspartate Aminotransferase", unit: "U/L", refLow: 0, refHigh: 40},
+            "K": {name: "Potassium", unit: "mmol/L", refLow: 3.5, refHigh: 5.5},
+            "Na": {name: "Sodium", unit: "mmol/L", refLow: 135, refHigh: 153},
+            "TC": {name: "Total Cholesterol", unit: "mmol/L", refLow: null, refHigh: 5.2},
+            "TG": {name: "Triglyceride", unit: "mmol/L", refLow: null, refHigh: 1.7},
+            "LDL-C": {name: "LDL Cholesterol", unit: "mmol/L", refLow: null, refHigh: 3.4},
+            "HCT": {name: "Hematocrit", unit: "L/L", refLow: 0.4, refHigh: 0.5},
+            "BUN": {name: "Blood Urea Nitrogen", unit: "mg/dL", refLow: 7, refHigh: 20}
+        };
+
+        let lang = 'en';
         let data = {
             labResults: [
-                {date: "2026-02-01", testCode: "GLU", result: 5.2, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
-                {date: "2026-02-01", testCode: "HGB", result: 13.5, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
-                {date: "2026-02-01", testCode: "WBC", result: 7.2, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
-                {date: "2026-02-01", testCode: "ALT", result: 28, unit: "U/L", refLow: 7, refHigh: 56},
-                {date: "2026-02-01", testCode: "Cr", result: 0.85, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
-                {date: "2026-02-03", testCode: "GLU", result: 5.5, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
-                {date: "2026-02-03", testCode: "HGB", result: 13.2, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
-                {date: "2026-02-03", testCode: "WBC", result: 11.6, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
-                {date: "2026-02-03", testCode: "ALT", result: 35, unit: "U/L", refLow: 7, refHigh: 56},
-                {date: "2026-02-03", testCode: "Cr", result: 0.92, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
-                {date: "2026-02-05", testCode: "GLU", result: 5.1, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
-                {date: "2026-02-05", testCode: "HGB", result: 13.8, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
-                {date: "2026-02-05", testCode: "WBC", result: 8.1, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
-                {date: "2026-02-05", testCode: "ALT", result: 32, unit: "U/L", refLow: 7, refHigh: 56},
-                {date: "2026-02-05", testCode: "Cr", result: 0.88, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+                {date: "2026-01-10", testCode: "GLU", result: 5.2, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-01-10", testCode: "HGB", result: 13.5, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-01-10", testCode: "WBC", result: 7.2, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-01-10", testCode: "ALT", result: 28, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-01-10", testCode: "Cr", result: 0.85, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+                {date: "2026-01-14", testCode: "GLU", result: 5.5, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-01-14", testCode: "HGB", result: 13.2, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-01-14", testCode: "WBC", result: 11.6, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-01-14", testCode: "ALT", result: 35, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-01-14", testCode: "Cr", result: 0.92, unit: "mg/dL", refLow: 0.6, refHigh: 1.2},
+                {date: "2026-01-18", testCode: "GLU", result: 5.1, unit: "mmol/L", refLow: 3.9, refHigh: 6.1},
+                {date: "2026-01-18", testCode: "HGB", result: 13.8, unit: "g/dL", refLow: 13.5, refHigh: 17.5},
+                {date: "2026-01-18", testCode: "WBC", result: 8.1, unit: "10^9/L", refLow: 3.5, refHigh: 9.5},
+                {date: "2026-01-18", testCode: "ALT", result: 32, unit: "U/L", refLow: 7, refHigh: 56},
+                {date: "2026-01-18", testCode: "Cr", result: 0.88, unit: "mg/dL", refLow: 0.6, refHigh: 1.2}
             ]
         };
 
+        function toggleLang() {
+            lang = lang === 'en' ? 'zh' : 'en';
+            document.querySelector('.lang-toggle').textContent = lang === 'en' ? '中文' : 'English';
+            updateDashboard();
+            updateResultsTab();
+            updateAbnormalTab();
+            populateTrendSelect();
+            populateTestCodeSelect();
+        }
+
         function switchTab(event, tabName) {
             event.preventDefault();
-            
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
 
-            if (tabName === 'results') {
-                updateResultsTab();
-            } else if (tabName === 'dashboard') {
-                updateDashboard();
-            } else if (tabName === 'entry') {
-                setTodayDate();
-            }
+            if (tabName === 'results') updateResultsTab();
+            else if (tabName === 'abnormal') updateAbnormalTab();
+            else if (tabName === 'trends') populateTrendSelect();
+            else if (tabName === 'entry') setTodayDate();
+        }
+
+        function getStatus(result, refLow, refHigh) {
+            if (refLow !== null && result < refLow) return 'low';
+            if (refHigh !== null && result > refHigh) return 'high';
+            return 'normal';
         }
 
         function updateDashboard() {
             const total = data.labResults.length;
-            const normal = data.labResults.filter(r => !isAbnormal(r)).length;
+            const normal = data.labResults.filter(r => getStatus(r.result, r.refLow, r.refHigh) === 'normal').length;
             const abnormal = total - normal;
-            const dates = data.labResults.map(r => r.date).filter(Boolean);
-            const latest = dates.length > 0 ? dates[dates.length - 1] : '-';
+            const dates = [...new Set(data.labResults.map(r => r.date))].sort();
+            const latest = dates[dates.length - 1] || '-';
 
-            document.getElementById('totalTests').textContent = total;
-            document.getElementById('normalCount').textContent = normal;
-            document.getElementById('abnormalCount').textContent = abnormal;
-            document.getElementById('latestDate').textContent = latest;
-
-            if (total === 0) {
-                document.getElementById('dashboardContent').innerHTML = '<div class="no-data">📊 No data available.</div>';
-            } else {
-                const uniqueDates = new Set(dates).size;
-                document.getElementById('dashboardContent').innerHTML = `
-                    <p style="color: #6b7280; font-size: 13px; margin-top: 20px;">
-                        📈 Showing ${total} test results from ${uniqueDates} unique dates
-                    </p>
-                `;
-            }
+            let html = `
+                <div class="stat-card kidney">
+                    <h3>Total Tests</h3>
+                    <div class="value">${total}</div>
+                </div>
+                <div class="stat-card blood">
+                    <h3>Normal</h3>
+                    <div class="value">${normal}</div>
+                </div>
+                <div class="stat-card liver">
+                    <h3>Abnormal</h3>
+                    <div class="value">${abnormal}</div>
+                </div>
+                <div class="stat-card heart">
+                    <h3>Latest Date</h3>
+                    <div class="value" style="font-size: 16px;">${latest}</div>
+                </div>
+            `;
+            document.getElementById('dashboardStats').innerHTML = html;
+            document.getElementById('dashboardContent').innerHTML = `<p style="color: #6b7280; font-size: 13px;">📈 Showing ${total} test results from ${dates.length} unique dates</p>`;
         }
 
         function updateResultsTab() {
             if (data.labResults.length === 0) {
-                document.getElementById('resultsContent').innerHTML = '<div class="no-data">📋 No results to display.</div>';
+                document.getElementById('resultsContent').innerHTML = '<div class="no-data">No results</div>';
                 return;
             }
 
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Test Code</th>
-                            <th>Result</th>
-                            <th>Unit</th>
-                            <th>Ref Range</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            data.labResults.forEach(result => {
-                const status = getStatus(result);
-                const statusClass = status === 'Normal' ? 'status-normal' : 'status-low';
-                html += `
-                    <tr>
-                        <td>${result.date || '-'}</td>
-                        <td><strong>${result.testCode || '-'}</strong></td>
-                        <td>${result.result || '-'}</td>
-                        <td>${result.unit || '-'}</td>
-                        <td>${result.refLow || '-'} - ${result.refHigh || '-'}</td>
-                        <td><span class="status-badge ${statusClass}">${status}</span></td>
-                    </tr>
-                `;
+            let html = `<table><thead><tr><th>Date</th><th>Code</th><th>Result</th><th>Unit</th><th>Ref Range</th><th>Status</th></tr></thead><tbody>`;
+            data.labResults.forEach(r => {
+                const status = getStatus(r.result, r.refLow, r.refHigh);
+                const badgeClass = `badge-${status}`;
+                html += `<tr><td>${r.date}</td><td><strong>${r.testCode}</strong></td><td>${r.result}</td><td>${r.unit}</td><td>${r.refLow || '-'} - ${r.refHigh || '-'}</td><td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td></tr>`;
             });
-
-            html += `
-                    </tbody>
-                </table>
-            `;
-
+            html += `</tbody></table>`;
             document.getElementById('resultsContent').innerHTML = html;
         }
 
-        function isAbnormal(result) {
-            const val = parseFloat(result.result);
-            const low = parseFloat(result.refLow);
-            const high = parseFloat(result.refHigh);
-            
-            if (isNaN(val)) return false;
-            if (!isNaN(low) && val < low) return true;
-            if (!isNaN(high) && val > high) return true;
-            return false;
+        function updateAbnormalTab() {
+            const abnormal = data.labResults.filter(r => getStatus(r.result, r.refLow, r.refHigh) !== 'normal');
+            if (abnormal.length === 0) {
+                document.getElementById('abnormalContent').innerHTML = '<div class="no-data">No abnormal results</div>';
+                return;
+            }
+
+            let html = `<table><thead><tr><th>Date</th><th>Code</th><th>Result</th><th>Ref Range</th><th>Status</th></tr></thead><tbody>`;
+            abnormal.forEach(r => {
+                const status = getStatus(r.result, r.refLow, r.refHigh);
+                html += `<tr><td>${r.date}</td><td><strong>${r.testCode}</strong></td><td>${r.result}</td><td>${r.refLow || '-'} - ${r.refHigh || '-'}</td><td><span class="badge badge-${status}">${status.toUpperCase()}</span></td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('abnormalContent').innerHTML = html;
         }
 
-        function getStatus(result) {
-            const val = parseFloat(result.result);
-            const low = parseFloat(result.refLow);
-            const high = parseFloat(result.refHigh);
-            
-            if (isNaN(val)) return 'Unknown';
-            if (!isNaN(low) && val < low) return 'Low';
-            if (!isNaN(high) && val > high) return 'High';
-            return 'Normal';
+        function populateTrendSelect() {
+            const tests = [...new Set(data.labResults.map(r => r.testCode))].sort();
+            let html = '<option value="">-- Select a test --</option>';
+            tests.forEach(t => {
+                html += `<option value="${t}">${t}</option>`;
+            });
+            document.getElementById('trendSelect').innerHTML = html;
+        }
+
+        function populateTestCodeSelect() {
+            const tests = Object.keys(TEST_INFO).sort();
+            let html = '<option value="">-- Select test --</option>';
+            tests.forEach(t => {
+                html += `<option value="${t}">${t}</option>`;
+            });
+            document.getElementById('entryCode').innerHTML = html;
+        }
+
+        function updateTestInfo() {
+            const code = document.getElementById('entryCode').value;
+            if (code && TEST_INFO[code]) {
+                const info = TEST_INFO[code];
+                document.getElementById('entryTestName').value = info.name;
+                document.getElementById('entryUnit').value = info.unit;
+                document.getElementById('entryRefRange').value = (info.refLow || '-') + ' - ' + (info.refHigh || '-');
+            }
+        }
+
+        function updateTrendChart() {
+            const testCode = document.getElementById('trendSelect').value;
+            if (!testCode) return;
+
+            const results = data.labResults.filter(r => r.testCode === testCode).sort((a, b) => a.date.localeCompare(b.date));
+            if (results.length === 0) return;
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: results.map(r => r.date),
+                    datasets: [{
+                        label: testCode,
+                        data: results.map(r => r.result),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            const info = TEST_INFO[testCode];
+            document.getElementById('trendInfo').innerHTML = `<p style="margin-top: 20px; color: #6b7280;">Test: ${info.name} | Unit: ${info.unit} | Ref: ${info.refLow || '-'} - ${info.refHigh || '-'}</p>`;
         }
 
         function setTodayDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('entryDate').value = today;
+            document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
         }
 
         function addEntry(event) {
             event.preventDefault();
-            
             const date = document.getElementById('entryDate').value;
             const testCode = document.getElementById('entryCode').value;
             const result = parseFloat(document.getElementById('entryResult').value);
-            const unit = document.getElementById('entryUnit').value;
-            const refLow = document.getElementById('entryRefLow').value ? parseFloat(document.getElementById('entryRefLow').value) : null;
-            const refHigh = document.getElementById('entryRefHigh').value ? parseFloat(document.getElementById('entryRefHigh').value) : null;
 
-            if (!date || !testCode || isNaN(result)) {
-                showMessage('Please fill in all required fields', 'error', 'entry');
-                return;
-            }
+            if (!date || !testCode || isNaN(result)) return;
 
+            const info = TEST_INFO[testCode];
             data.labResults.push({
-                date: date,
-                testCode: testCode,
-                result: result,
-                unit: unit,
-                refLow: refLow,
-                refHigh: refHigh
+                date, testCode, result,
+                unit: info.unit,
+                refLow: info.refLow,
+                refHigh: info.refHigh
             });
 
-            showMessage('✅ Entry added successfully!', 'success', 'entry');
+            document.getElementById('entryMessage').innerHTML = '<div class="message success">✅ Entry added successfully!</div>';
+            setTimeout(() => document.getElementById('entryMessage').innerHTML = '', 3000);
             clearEntryForm();
             updateDashboard();
         }
@@ -459,27 +549,15 @@
             document.getElementById('entryDate').value = '';
             document.getElementById('entryCode').value = '';
             document.getElementById('entryResult').value = '';
+            document.getElementById('entryTestName').value = '';
             document.getElementById('entryUnit').value = '';
-            document.getElementById('entryRefLow').value = '';
-            document.getElementById('entryRefHigh').value = '';
+            document.getElementById('entryRefRange').value = '';
             setTodayDate();
         }
 
-        function showMessage(text, type, tabId) {
-            const messageDiv = document.getElementById(tabId + 'Message');
-            if (messageDiv) {
-                messageDiv.className = `message ${type}`;
-                messageDiv.textContent = text;
-                messageDiv.style.display = 'block';
-                setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 4000);
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             updateDashboard();
+            populateTestCodeSelect();
             setTodayDate();
         });
     </script>
