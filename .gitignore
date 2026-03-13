@@ -1,0 +1,10 @@
+# Sensitive source files - DO NOT commit
+medical_tracker_src.html
+encrypt_page.js
+JSX/
+*.csv
+*.xlsx
+.DS_Store
+
+# Keep only the encrypted output
+# medical_tracker.html and index.html are safe to commit
